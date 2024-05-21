@@ -1,0 +1,52 @@
+version: "3.8"
+
+# https://cassandra.apache.org/doc/4.1/cassandra/configuration/cass_yaml_file.html
+x-cassandra-env: &environment
+  CASSANDRA_SEEDS: "node1,node2"
+  CASSANDRA_CLUSTER_NAME: DDBCluster
+  CASSANDRA_DC: DatacenterSWAP
+  CASSANDRA_RACK: WorkRACK
+  CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+  CASSANDRA_NUM_TOKENS: 128
+
+networks:
+  cassandra:
+
+services:
+  node1:
+    image: cassandra:latest
+    container_name: node1
+    hostname: node1
+    networks:
+      - cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./data.cql:/home/data.cql
+    environment: *environment
+
+  node2:
+    image: cassandra:latest
+    container_name: node2
+    hostname: node2
+    networks:
+      - cassandra
+    ports:
+      - "9043:9042"
+    environment: *environment
+    depends_on:
+      node1:
+        condition: service_started
+
+  node3:
+    image: cassandra:latest
+    container_name: node3
+    hostname: node3
+    networks:
+      - cassandra
+    ports:
+      - "9044:9042"
+    environment: *environment
+    depends_on:
+      node2:
+        condition: service_started
